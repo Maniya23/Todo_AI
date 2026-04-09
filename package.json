@@ -1,0 +1,11 @@
+{
+  "name": "todo-app",
+  "private": true,
+  "description": "Local todo server with Gemini categorization",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@google/genai": "^1.49.0"
+  }
+}

@@ -1,7 +1,11 @@
 /**
  * Serves the static Todo app and reads/writes data/todos.json via /api/todos.
- * Run from the project folder: node server.js
- * Then open the URL printed in the terminal (default port 3000).
+ *
+ * Setup: npm install   then: node server.js
+ * Open the URL printed in the terminal (default port 3000).
+ *
+ * Gemini: uses @google/genai (see https://ai.google.dev/gemini-api/docs/quickstart).
+ * API key from GEMINI_API_KEY or config.local.json → geminiApiKey (browser never sends the key).
  */
 
 const http = require("http");
@@ -10,6 +14,7 @@ const path = require("path");
 
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, "data", "todos.json");
+const CONFIG_LOCAL_FILE = path.join(ROOT, "config.local.json");
 const PREFERRED_PORT = Number(process.env.PORT) || 3000;
 const MAX_PORT_TRY = PREFERRED_PORT + 40;
 let listenPort = PREFERRED_PORT;
@@ -37,8 +42,41 @@ const VALID_AI_CATEGORIES = [
   "Other",
 ];
 
-/** Override with env if a model returns 404, e.g. gemini-1.5-flash */
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+/**
+ * Default model per Gemini API quickstart:
+ * https://ai.google.dev/gemini-api/docs/quickstart
+ * Override: GEMINI_MODEL=...
+ */
+const GEMINI_MODEL =
+  process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+
+/**
+ * Read Gemini key from config.local.json (read on each AI request so edits apply without restart).
+ * @returns {string}
+ */
+function getGeminiApiKeyFromConfigFile() {
+  try {
+    if (!fs.existsSync(CONFIG_LOCAL_FILE)) return "";
+    const raw = fs
+      .readFileSync(CONFIG_LOCAL_FILE, "utf8")
+      .replace(/^\uFEFF/, "");
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== "object") return "";
+    const a =
+      typeof data.geminiApiKey === "string" ? data.geminiApiKey.trim() : "";
+    const b =
+      typeof data.GEMINI_API_KEY === "string"
+        ? data.GEMINI_API_KEY.trim()
+        : "";
+    return a || b;
+  } catch (e) {
+    console.warn(
+      "config.local.json: %s",
+      String(/** @type {Error} */ (e).message),
+    );
+  }
+  return "";
+}
 
 /**
  * @param {import("http").IncomingMessage} req
@@ -61,12 +99,15 @@ function readRequestBody(req, maxLen = 1_000_000) {
 }
 
 /**
- * One Gemini call: task title -> category JSON.
+ * One Gemini call: task title -> category JSON (via @google/genai SDK).
  * @param {string} taskTitle
  * @param {string} apiKey
  * @returns {Promise<string>}
  */
 async function geminiCategorizeTask(taskTitle, apiKey) {
+  const { GoogleGenAI } = await import("@google/genai");
+  const ai = new GoogleGenAI({ apiKey });
+
   const prompt = `You label todo tasks with exactly one category.
 
 Return ONLY valid JSON in this form: {"category":"Work"}
@@ -74,36 +115,21 @@ The category string must be exactly one of: Work, Study, Health, Shopping, Perso
 
 Task: ${JSON.stringify(taskTitle)}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-  const r = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey,
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: prompt,
+    config: {
+      temperature: 0.2,
+      maxOutputTokens: 128,
+      responseMimeType: "application/json",
     },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 128,
-        responseMimeType: "application/json",
-      },
-    }),
   });
 
-  const data = await r.json();
-  if (!r.ok) {
-    const msg =
-      (data && data.error && data.error.message) ||
-      (typeof data === "string" ? data : JSON.stringify(data));
-    throw new Error(msg || `Gemini HTTP ${r.status}`);
-  }
-
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = response.text;
   if (!text || typeof text !== "string") {
-    const block = data?.promptFeedback?.blockReason;
+    const block = response.promptFeedback?.blockReason;
     if (block) throw new Error(`Blocked: ${block}`);
-    throw new Error("No reply from Gemini. Try GEMINI_MODEL=gemini-1.5-flash");
+    throw new Error("No reply text from Gemini.");
   }
 
   let obj;
@@ -232,9 +258,7 @@ const server = http.createServer((req, res) => {
         const envKey = process.env.GEMINI_API_KEY
           ? String(process.env.GEMINI_API_KEY).trim()
           : "";
-        const bodyKey =
-          typeof parsed.apiKey === "string" ? parsed.apiKey.trim() : "";
-        const apiKey = envKey || bodyKey;
+        const apiKey = envKey || getGeminiApiKeyFromConfigFile();
 
         if (!title) {
           res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
@@ -246,7 +270,7 @@ const server = http.createServer((req, res) => {
           res.end(
             JSON.stringify({
               error:
-                "No API key. Set GEMINI_API_KEY when starting the server, or save a key in the app.",
+                "No API key. Put geminiApiKey in config.local.json (same folder as server.js) or set GEMINI_API_KEY, then restart node server.js.",
             })
           );
           return;
@@ -319,11 +343,18 @@ server.listen(listenPort, () => {
   }
   console.log(`Todo app: http://localhost:${listenPort}`);
   console.log(`Data file: ${DATA_FILE}`);
-  if (process.env.GEMINI_API_KEY) {
-    console.log(`Gemini: using API key from GEMINI_API_KEY (model ${GEMINI_MODEL})`);
+  const envK = process.env.GEMINI_API_KEY
+    ? String(process.env.GEMINI_API_KEY).trim()
+    : "";
+  if (envK) {
+    console.log(`Gemini: API key from GEMINI_API_KEY (model ${GEMINI_MODEL})`);
+  } else if (getGeminiApiKeyFromConfigFile()) {
+    console.log(
+      `Gemini: API key from config.local.json (model ${GEMINI_MODEL})`,
+    );
   } else {
     console.log(
-      "Gemini: set GEMINI_API_KEY to enable AI, or paste a key in the app (local only)."
+      `Gemini: no key — add config.local.json with geminiApiKey or set GEMINI_API_KEY. Expected file: ${CONFIG_LOCAL_FILE}`,
     );
   }
 });

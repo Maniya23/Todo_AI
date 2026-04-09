@@ -1,21 +1,15 @@
 /**
- * AI categorization — browser calls OUR server only.
- * The server forwards the request to Gemini (avoids CORS and keeps the key off the client when you use GEMINI_API_KEY).
+ * AI categorization — browser calls our server only.
+ * The server reads the Gemini API key from the environment or config file (not from the page).
  *
  * @param {string} title Task text
- * @param {string} [apiKey] Optional; sent only if provided (e.g. saved in browser). Otherwise the server uses the GEMINI_API_KEY environment variable.
  * @returns {Promise<string>} One of: Work, Study, Health, Shopping, Personal, Other
  */
-async function requestAiCategory(title, apiKey) {
+async function requestAiCategory(title) {
   const res = await fetch("/api/ai/categorize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title,
-      ...(apiKey && String(apiKey).trim().length > 0
-        ? { apiKey: String(apiKey).trim() }
-        : {}),
-    }),
+    body: JSON.stringify({ title }),
   });
 
   let data = {};

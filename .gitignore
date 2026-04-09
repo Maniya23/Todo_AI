@@ -1,0 +1,14 @@
+# Local secrets — copy config.example.json to this file and add your key
+config.local.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Dependencies (if you add npm later)
+node_modules/

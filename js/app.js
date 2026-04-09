@@ -22,8 +22,6 @@ const KNOWN_CATEGORIES = [
 /** `<select>` value that triggers Gemini via `requestAiCategory` (see gemini.js). */
 const AI_CATEGORY_VALUE = "__ai__";
 
-const GEMINI_KEY_STORAGE = "todo_gemini_key";
-
 /** Bootstrap badge classes per category (visual only) */
 const CATEGORY_BADGE_CLASS = {
   Work: "text-bg-primary",
@@ -64,9 +62,6 @@ const submitBtn = form.querySelector('button[type="submit"]');
 const listEl = document.getElementById("todo-list");
 const emptyEl = document.getElementById("empty-state");
 const alertEl = document.getElementById("app-alert");
-const geminiKeyInput = document.getElementById("gemini-api-key");
-const geminiSaveKeyBtn = document.getElementById("gemini-save-key");
-const geminiKeyStatus = document.getElementById("gemini-key-status");
 
 /**
  * Generate a simple unique id (good enough for client-side todos).
@@ -267,7 +262,6 @@ async function addTodo() {
   let category;
 
   if (mode === AI_CATEGORY_VALUE) {
-    const browserKey = localStorage.getItem(GEMINI_KEY_STORAGE) || "";
     const prevBtn = submitBtn ? submitBtn.textContent : "";
     setFormEnabled(false);
     if (submitBtn) submitBtn.textContent = "Working...";
@@ -276,7 +270,7 @@ async function addTodo() {
       if (typeof requestAiCategory !== "function") {
         throw new Error("AI helper not loaded. Refresh the page.");
       }
-      const raw = await requestAiCategory(title, browserKey || undefined);
+      const raw = await requestAiCategory(title);
       category = sanitizeCategory(raw) ?? "Other";
     } catch (err) {
       console.error(err);
@@ -403,22 +397,6 @@ form.addEventListener("submit", (e) => {
   e.preventDefault();
   void addTodo();
 });
-
-if (geminiSaveKeyBtn && geminiKeyInput) {
-  geminiSaveKeyBtn.addEventListener("click", () => {
-    const k = geminiKeyInput.value.trim();
-    if (k) {
-      localStorage.setItem(GEMINI_KEY_STORAGE, k);
-    } else {
-      localStorage.removeItem(GEMINI_KEY_STORAGE);
-    }
-    geminiKeyInput.value = "";
-    if (geminiKeyStatus) {
-      geminiKeyStatus.textContent = k ? "Saved." : "Cleared.";
-      geminiKeyStatus.classList.remove("d-none");
-    }
-  });
-}
 
 async function init() {
   try {

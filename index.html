@@ -68,53 +68,7 @@
                 </div>
               </div>
               <div id="todo-input-help" class="form-text mt-2">
-                Press <kbd>Enter</kbd> or tap <strong>Add</strong>. Choose
-                <strong>Auto (AI)</strong> to label the task with Gemini (see
-                setup below).
-              </div>
-              <div class="border-top pt-3 mt-3">
-                <button
-                  class="btn btn-sm btn-link p-0 text-decoration-none"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#ai-settings"
-                  aria-expanded="false"
-                  aria-controls="ai-settings"
-                >
-                  Gemini API setup
-                </button>
-                <div id="ai-settings" class="collapse mt-2">
-                  <p class="small text-body-secondary mb-2">
-                    <strong>Recommended:</strong> create a key at Google AI
-                    Studio, then start the server with
-                    <code>GEMINI_API_KEY=your_key node server.js</code> (key
-                    stays on the server).
-                    <strong> Optional:</strong> paste a key here for local
-                    testing only (stored in this browser).
-                  </p>
-                  <label for="gemini-api-key" class="form-label small mb-1"
-                    >API key (optional if already set on server)</label
-                  >
-                  <input
-                    type="password"
-                    class="form-control form-control-sm"
-                    id="gemini-api-key"
-                    autocomplete="off"
-                    placeholder="Paste key or rely on GEMINI_API_KEY"
-                  />
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary mt-2"
-                    id="gemini-save-key"
-                  >
-                    Save key in this browser
-                  </button>
-                  <span
-                    id="gemini-key-status"
-                    class="small text-success ms-2 d-none"
-                    >Saved.</span
-                  >
-                </div>
+                Press <kbd>Enter</kbd> or tap <strong>Add</strong>.
               </div>
             </form>
 
