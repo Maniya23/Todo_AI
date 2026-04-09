@@ -1,0 +1,48 @@
+/* Layout: comfortable reading width on large screens */
+.container-narrow {
+  max-width: 32rem;
+}
+
+/* Todo list: subtle separation between items */
+.todo-list .list-group-item {
+  border-left: 0;
+  border-right: 0;
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+
+.todo-list .list-group-item:first-child {
+  border-top: 0;
+}
+
+/* Completed tasks: strikethrough + muted */
+.todo-item--done .todo-item__text {
+  text-decoration: line-through;
+  color: var(--bs-secondary-color);
+}
+
+/* Checkbox: slightly larger tap target on touch */
+.todo-item__check {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.todo-item__text {
+  word-break: break-word;
+}
+
+.todo-item__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
+/* Empty state visibility handled in JS; optional polish */
+.empty-state {
+  border: 1px dashed var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-body-bg);
+}
