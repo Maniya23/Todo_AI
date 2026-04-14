@@ -47,8 +47,7 @@ const VALID_AI_CATEGORIES = [
  * https://ai.google.dev/gemini-api/docs/quickstart
  * Override: GEMINI_MODEL=...
  */
-const GEMINI_MODEL =
-  process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 
 /**
  * Read Gemini key from config.local.json (read on each AI request so edits apply without restart).
@@ -65,9 +64,7 @@ function getGeminiApiKeyFromConfigFile() {
     const a =
       typeof data.geminiApiKey === "string" ? data.geminiApiKey.trim() : "";
     const b =
-      typeof data.GEMINI_API_KEY === "string"
-        ? data.GEMINI_API_KEY.trim()
-        : "";
+      typeof data.GEMINI_API_KEY === "string" ? data.GEMINI_API_KEY.trim() : "";
     return a || b;
   } catch (e) {
     console.warn(
@@ -112,6 +109,7 @@ async function geminiCategorizeTask(taskTitle, apiKey) {
 
 Return ONLY valid JSON in this form: {"category":"Work"}
 The category string must be exactly one of: Work, Study, Health, Shopping, Personal, Other. No other keys.
+Do not write any introduction, explanation, or text before or after the JSON.
 
 Task: ${JSON.stringify(taskTitle)}`;
 
@@ -120,12 +118,16 @@ Task: ${JSON.stringify(taskTitle)}`;
     contents: prompt,
     config: {
       temperature: 0.2,
-      maxOutputTokens: 128,
+      maxOutputTokens: 1024,
       responseMimeType: "application/json",
+      thinkingConfig: {
+        thinkingBudget: 0,
+      },
     },
   });
 
   const text = response.text;
+  const finishReason = response.candidates?.[0]?.finishReason;
   if (!text || typeof text !== "string") {
     const block = response.promptFeedback?.blockReason;
     if (block) throw new Error(`Blocked: ${block}`);
@@ -155,7 +157,7 @@ function ensureDataFile() {
     fs.writeFileSync(
       DATA_FILE,
       `${JSON.stringify(DEFAULT_DOC, null, 2)}\n`,
-      "utf8"
+      "utf8",
     );
   }
 }
@@ -209,7 +211,9 @@ const server = http.createServer((req, res) => {
       res.end(text);
     } catch (e) {
       res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: String(/** @type {Error} */ (e).message) }));
+      res.end(
+        JSON.stringify({ error: String(/** @type {Error} */ (e).message) }),
+      );
     }
     return;
   }
@@ -229,11 +233,15 @@ const server = http.createServer((req, res) => {
     req.on("end", () => {
       try {
         writeTodosFile(body);
-        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.writeHead(200, {
+          "Content-Type": "application/json; charset=utf-8",
+        });
         res.end(readTodosFile());
       } catch (e) {
         res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: String(/** @type {Error} */ (e).message) }));
+        res.end(
+          JSON.stringify({ error: String(/** @type {Error} */ (e).message) }),
+        );
       }
     });
     return;
@@ -246,7 +254,9 @@ const server = http.createServer((req, res) => {
         try {
           parsed = JSON.parse(raw || "{}");
         } catch {
-          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.writeHead(400, {
+            "Content-Type": "application/json; charset=utf-8",
+          });
           res.end(JSON.stringify({ error: "Invalid JSON body" }));
           return;
         }
@@ -261,38 +271,50 @@ const server = http.createServer((req, res) => {
         const apiKey = envKey || getGeminiApiKeyFromConfigFile();
 
         if (!title) {
-          res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+          res.writeHead(400, {
+            "Content-Type": "application/json; charset=utf-8",
+          });
           res.end(JSON.stringify({ error: "Missing or empty title" }));
           return;
         }
         if (!apiKey) {
-          res.writeHead(401, { "Content-Type": "application/json; charset=utf-8" });
+          res.writeHead(401, {
+            "Content-Type": "application/json; charset=utf-8",
+          });
           res.end(
             JSON.stringify({
               error:
                 "No API key. Put geminiApiKey in config.local.json (same folder as server.js) or set GEMINI_API_KEY, then restart node server.js.",
-            })
+            }),
           );
           return;
         }
 
         try {
           const category = await geminiCategorizeTask(title, apiKey);
-          res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+          res.writeHead(200, {
+            "Content-Type": "application/json; charset=utf-8",
+          });
           res.end(JSON.stringify({ category }));
         } catch (e) {
-          res.writeHead(502, { "Content-Type": "application/json; charset=utf-8" });
+          res.writeHead(502, {
+            "Content-Type": "application/json; charset=utf-8",
+          });
           res.end(
             JSON.stringify({
               error: String(/** @type {Error} */ (e).message || e),
-            })
+            }),
           );
         }
       })
       .catch((e) => {
-        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.writeHead(400, {
+          "Content-Type": "application/json; charset=utf-8",
+        });
         res.end(
-          JSON.stringify({ error: String(/** @type {Error} */ (e).message || e) })
+          JSON.stringify({
+            error: String(/** @type {Error} */ (e).message || e),
+          }),
         );
       });
     return;
@@ -312,7 +334,9 @@ const server = http.createServer((req, res) => {
       return;
     }
     const ext = path.extname(filePath);
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+    res.writeHead(200, {
+      "Content-Type": MIME[ext] || "application/octet-stream",
+    });
     res.end(buf);
   });
 });
@@ -329,7 +353,7 @@ server.on("error", (err) => {
   }
   if (e.code === "EADDRINUSE") {
     console.error(
-      `Port ${PREFERRED_PORT} (and next ports) are in use. Stop the other process or run PORT=3050 node server.js`
+      `Port ${PREFERRED_PORT} (and next ports) are in use. Stop the other process or run PORT=3050 node server.js`,
     );
   } else {
     console.error(err);
@@ -339,7 +363,9 @@ server.on("error", (err) => {
 
 server.listen(listenPort, () => {
   if (listenPort !== PREFERRED_PORT) {
-    console.log(`(Port ${PREFERRED_PORT} was busy; using ${listenPort} instead.)`);
+    console.log(
+      `(Port ${PREFERRED_PORT} was busy; using ${listenPort} instead.)`,
+    );
   }
   console.log(`Todo app: http://localhost:${listenPort}`);
   console.log(`Data file: ${DATA_FILE}`);
