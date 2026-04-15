@@ -21,6 +21,7 @@ const KNOWN_CATEGORIES = [
 
 /** `<select>` value that triggers Gemini via `requestAiCategory` (see gemini.js). */
 const AI_CATEGORY_VALUE = "__ai__";
+const ALL_CATEGORY_FILTER = "__all__";
 
 /** Bootstrap badge classes per category (visual only) */
 const CATEGORY_BADGE_CLASS = {
@@ -55,13 +56,18 @@ let storageReady = false;
 /** Debounce timer for PUT requests */
 let saveTimer = 0;
 
+/** Current category filter for visible tasks */
+let selectedCategoryFilter = ALL_CATEGORY_FILTER;
+
 const form = document.getElementById("todo-form");
 const input = document.getElementById("todo-input");
 const categorySelect = document.getElementById("todo-category");
 const submitBtn = form.querySelector('button[type="submit"]');
 const listEl = document.getElementById("todo-list");
 const emptyEl = document.getElementById("empty-state");
+const emptyTextEl = emptyEl ? emptyEl.querySelector("p") : null;
 const alertEl = document.getElementById("app-alert");
+const categoryFilterSelect = document.getElementById("todo-filter-category");
 
 /**
  * Generate a simple unique id (good enough for client-side todos).
@@ -193,6 +199,7 @@ function setFormEnabled(enabled) {
   input.disabled = !enabled;
   if (submitBtn) submitBtn.disabled = !enabled;
   if (categorySelect) categorySelect.disabled = !enabled;
+  if (categoryFilterSelect) categoryFilterSelect.disabled = !enabled;
 }
 
 /** GET /api/todos → appData */
@@ -326,12 +333,30 @@ function deleteTodo(id) {
 }
 
 /**
- * Toggle empty state vs list visibility.
+ * Return todos filtered by currently selected category.
+ * @returns {Todo[]}
  */
-function updateEmptyState() {
-  const empty = appData.todos.length === 0;
+function getVisibleTodos() {
+  if (selectedCategoryFilter === ALL_CATEGORY_FILTER) {
+    return appData.todos;
+  }
+  return appData.todos.filter((todo) => todo.category === selectedCategoryFilter);
+}
+
+/**
+ * Toggle empty state vs list visibility.
+ * @param {number} visibleCount
+ */
+function updateEmptyState(visibleCount) {
+  const hasAnyTodos = appData.todos.length > 0;
+  const empty = visibleCount === 0;
   emptyEl.classList.toggle("d-none", !empty);
   listEl.classList.toggle("d-none", empty);
+  if (emptyTextEl) {
+    emptyTextEl.textContent = hasAnyTodos
+      ? "No tasks in this category yet."
+      : "No tasks yet. Add one in the Add a task panel.";
+  }
 }
 
 /**
@@ -339,8 +364,9 @@ function updateEmptyState() {
  */
 function render() {
   listEl.replaceChildren();
+  const visibleTodos = getVisibleTodos();
 
-  for (const todo of appData.todos) {
+  for (const todo of visibleTodos) {
     const item = document.createElement("li");
     item.className = `list-group-item todo-item d-flex align-items-start gap-3 ${
       todo.completed ? "todo-item--done" : ""
@@ -388,7 +414,7 @@ function render() {
     listEl.appendChild(item);
   }
 
-  updateEmptyState();
+  updateEmptyState(visibleTodos.length);
 }
 
 // --- Event wiring ---
@@ -397,6 +423,13 @@ form.addEventListener("submit", (e) => {
   e.preventDefault();
   void addTodo();
 });
+
+if (categoryFilterSelect) {
+  categoryFilterSelect.addEventListener("change", () => {
+    selectedCategoryFilter = categoryFilterSelect.value;
+    render();
+  });
+}
 
 async function init() {
   try {

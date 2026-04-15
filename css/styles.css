@@ -1,6 +1,16 @@
-/* Layout: comfortable reading width on large screens */
-.container-narrow {
-  max-width: 32rem;
+/* Two-panel layout: add (left) + list (right) */
+.container-todo {
+  max-width: 58rem;
+}
+
+/* Right card: scroll long lists without stretching the page too far */
+.todo-list-scroll {
+  max-height: min(28rem, 55vh);
+  overflow-y: auto;
+}
+
+.todo-panel-card {
+  min-height: 18rem;
 }
 
 /* Todo list: subtle separation between items */

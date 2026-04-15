@@ -15,74 +15,122 @@
   </head>
   <body class="bg-body-tertiary">
     <div class="app-shell min-vh-100 py-4 py-md-5">
-      <div class="container container-narrow">
+      <div class="container container-todo">
         <header class="text-center mb-4">
           <h1 class="h2 fw-semibold mb-1">Todo</h1>
           <p class="text-body-secondary small mb-0">
-            Add tasks, check them off, remove what you don’t need.
+            Add tasks on the left, manage and filter them on the right.
           </p>
         </header>
 
-        <div class="card shadow-sm border-0">
-          <div class="card-body p-4">
-            <div
-              id="app-alert"
-              class="alert alert-warning mb-4 d-none"
-              role="alert"
-            ></div>
-            <!-- Add task form -->
-            <form id="todo-form" class="mb-4" novalidate>
-              <label for="todo-input" class="form-label visually-hidden"
-                >New task</label
-              >
-              <div class="input-group input-group-lg">
-                <input
-                  type="text"
-                  id="todo-input"
-                  class="form-control"
-                  placeholder="What do you need to do?"
-                  autocomplete="off"
-                  maxlength="500"
-                  aria-describedby="todo-input-help"
-                />
-                <button type="submit" class="btn btn-primary px-4">Add</button>
+        <div
+          id="app-alert"
+          class="alert alert-warning mb-4 d-none"
+          role="alert"
+        ></div>
+
+        <div class="row g-4 align-items-stretch">
+          <!-- Add task -->
+          <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-transparent border-bottom py-3">
+                <h2 class="h6 fw-semibold mb-0">Add a task</h2>
+                <p class="small text-body-secondary mb-0 mt-1">
+                  Title, category, or Auto (AI).
+                </p>
               </div>
-              <div class="row g-2 align-items-end mt-3">
-                <div class="col">
-                  <label for="todo-category" class="form-label small mb-1"
-                    >Category</label
+              <div class="card-body p-4">
+                <form id="todo-form" novalidate>
+                  <label for="todo-input" class="form-label visually-hidden"
+                    >New task</label
+                  >
+                  <div class="input-group input-group-lg">
+                    <input
+                      type="text"
+                      id="todo-input"
+                      class="form-control"
+                      placeholder="What do you need to do?"
+                      autocomplete="off"
+                      maxlength="500"
+                      aria-describedby="todo-input-help"
+                    />
+                    <button type="submit" class="btn btn-primary px-4">
+                      Add
+                    </button>
+                  </div>
+                  <div class="row g-2 align-items-end mt-3">
+                    <div class="col">
+                      <label for="todo-category" class="form-label small mb-1"
+                        >Category</label
+                      >
+                      <select
+                        class="form-select"
+                        id="todo-category"
+                        aria-describedby="todo-input-help"
+                      >
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="Health">Health</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Other" selected>Other</option>
+                        <option value="__ai__">Auto (AI)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="todo-input-help" class="form-text mt-2">
+                    Press <kbd>Enter</kbd> or tap <strong>Add</strong>.
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task list -->
+          <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100 todo-panel-card">
+              <div class="card-header bg-transparent border-bottom py-3">
+                <h2 class="h6 fw-semibold mb-0">Your tasks</h2>
+                <p class="small text-body-secondary mb-0 mt-1">
+                  Filter by category, complete, or delete.
+                </p>
+              </div>
+              <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                <div class="mb-3">
+                  <label
+                    for="todo-filter-category"
+                    class="form-label small mb-1"
+                    >View by category</label
                   >
                   <select
-                    class="form-select"
-                    id="todo-category"
-                    aria-describedby="todo-input-help"
+                    class="form-select form-select-sm"
+                    id="todo-filter-category"
                   >
+                    <option value="__all__" selected>All</option>
                     <option value="Work">Work</option>
                     <option value="Study">Study</option>
                     <option value="Health">Health</option>
                     <option value="Shopping">Shopping</option>
                     <option value="Personal">Personal</option>
-                    <option value="Other" selected>Other</option>
-                    <option value="__ai__">Auto (AI)</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
-              </div>
-              <div id="todo-input-help" class="form-text mt-2">
-                Press <kbd>Enter</kbd> or tap <strong>Add</strong>.
-              </div>
-            </form>
 
-            <!-- Task list -->
-            <div id="empty-state" class="empty-state text-center py-5 d-none">
-              <p class="text-body-secondary mb-0">
-                No tasks yet. Add one above to get started.
-              </p>
+                <div
+                  id="empty-state"
+                  class="empty-state text-center py-5 flex-grow-1 d-flex align-items-center justify-content-center d-none"
+                >
+                  <p class="text-body-secondary mb-0 px-2">
+                    No tasks yet. Add one to get started.
+                  </p>
+                </div>
+                <ul
+                  id="todo-list"
+                  class="list-group list-group-flush todo-list todo-list-scroll flex-grow-1"
+                  aria-label="Task list"
+                ></ul>
+              </div>
             </div>
-            <ul
-              id="todo-list"
-              class="list-group list-group-flush todo-list"
-              aria-label="Task list"
-            ></ul>
           </div>
         </div>
       </div>
