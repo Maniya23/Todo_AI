@@ -264,7 +264,7 @@ async function addTodo() {
   const title = input.value.trim();
   if (!title) return;
 
-  const mode = categorySelect ? categorySelect.value : "Other";
+  const mode = categorySelect ? categorySelect.value : AI_CATEGORY_VALUE;
   /** @type {TodoCategory} */
   let category;
 
@@ -303,7 +303,7 @@ async function addTodo() {
   });
   input.value = "";
   input.focus();
-  if (categorySelect) categorySelect.value = "Other";
+  if (categorySelect) categorySelect.value = AI_CATEGORY_VALUE;
   saveAppData();
   render();
 }
