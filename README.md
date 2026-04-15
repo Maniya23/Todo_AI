@@ -1,20 +1,28 @@
-# Todo App
+# ✅ Todo App
 
 **Check boxes. Sort stuff. Let a robot guess your categories.**  
 A cozy little todo app: Bootstrap on the outside, vanilla JS on the inside, and a tiny Node server holding the fort (and your `todos.json`).
 
 ---
 
-## What it does
+## 🌐 Live preview
 
-- Add tasks, pick a **category** by hand, or go **Auto (AI)** and let Gemini label the chaos.
-- **Filter** the list by category when your brain only wants to see “Work” today.
-- **Complete** and **delete** tasks like it’s 1999, but with rounded corners.
-- Everything lives in **`data/todos.json`** so your list survives refreshes—at least while your server does.
+**Try it in the wild:** [https://todo-ai-aztv.onrender.com/](https://todo-ai-aztv.onrender.com/)
+
+*(Hosted on [Render](https://render.com/)—first load after sleep can take a few seconds. Coffee break ☕)*
 
 ---
 
-## The stack (no framework drama)
+## ✨ What it does
+
+- ➕ Add tasks, pick a **category** by hand, or go **Auto (AI)** and let Gemini label the chaos.
+- 🔍 **Filter** the list by category when your brain only wants to see “Work” today.
+- ✔️ **Complete** and 🗑️ **delete** tasks like it’s 1999, but with rounded corners.
+- 💾 Everything lives in **`data/todos.json`** so your list survives refreshes—at least while your server does.
+
+---
+
+## 🧱 The stack (no framework drama)
 
 | Layer | Choice |
 |--------|--------|
@@ -27,7 +35,7 @@ Node **20+** is the happy path (the GenAI SDK likes it that way).
 
 ---
 
-## Folder tour (the hits)
+## 📁 Folder tour (the hits)
 
 ```
 Todo_App/
@@ -43,7 +51,7 @@ Todo_App/
 
 ---
 
-## Quick start (local)
+## 🚀 Quick start (local)
 
 **1. Install**
 
@@ -87,7 +95,7 @@ Open the URL it prints (usually `http://localhost:3000`). If 3000 is taken, this
 
 ---
 
-## API cheat sheet
+## 🔌 API cheat sheet
 
 Same origin as the page—your frontend already calls these:
 
@@ -97,7 +105,7 @@ Same origin as the page—your frontend already calls these:
 
 ---
 
-## Shipping it (e.g. Render)
+## ☁️ Shipping it (e.g. Render)
 
 **Web Service** settings that work:
 
@@ -105,17 +113,19 @@ Same origin as the page—your frontend already calls these:
 - **Start:** `node server.js`
 - **Env:** set `GEMINI_API_KEY` in the dashboard (don’t commit real keys)
 
+Your live app can live at something like [https://todo-ai-aztv.onrender.com/](https://todo-ai-aztv.onrender.com/) once deployed.
+
 Heads-up: on many hosts the disk is **ephemeral**. Your JSON file might get a fresh start on redeploy unless you add persistent storage or a database. The app won’t judge you—it’ll just forget.
 
 ---
 
-## Security (the boring-but-important bit)
+## 🔒 Security (the boring-but-important bit)
 
 - Never commit `config.local.json` with a real key.
 - In production, prefer **`GEMINI_API_KEY` on the server** over baking secrets into files.
 
 ---
 
-## License
+## 📜 License
 
-Use it, break it, fork it, teach with it. Have fun.
+Use it, break it, fork it, teach with it. Have fun. 🎉
